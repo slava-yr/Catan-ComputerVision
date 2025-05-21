@@ -3,19 +3,19 @@ clc; clear; close all;
 % Detectar los 6 tipos de loseta: Bosque, Pasto, Montaña, Colina, Campo,
 % Desierto
 %% --- 1: Cargar imagen ---
-img = imread('imgs/catan 2.jpeg');  
+img = imread('imgs/catan 6.jpeg');  
 [h, w, ~] = size(img);
 figure; imshow(img); title('Imagen original');
 
 %% --- PARTE 2: Preprocesamiento ---
 % Contrast stretching
-img_stretch = imadjust(im2double(img_corr), stretchlim(im2double(img)), []);
+img_stretch = imadjust(im2double(img), stretchlim(im2double(img)), []);
 % Filtro bilateral
 img_bilateral = imbilatfilt(img_stretch, 0.2, 3);
 
 figure; imshow(img_bilateral); title('Imagen preprocesada');
 
-k = 7;
+k = 8;
 
 %% --- PARTE 3: Detección de regiones ---
 % --- 3. Segmentación en diferentes espacios de color ---
