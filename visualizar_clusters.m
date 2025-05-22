@@ -13,7 +13,7 @@ figure; imshow(img); title('Imagen original');
 img_bilateral = imbilatfilt(img, 0.2, 3);
 figure; imshow(img_bilateral); title('Imagen preprocesada');
 
-k = 7; % número de clusters (losetas + posibles fondo o detalles)
+k = 6; % número de clusters (losetas)
 
 %% --- PARTE 3: Segmentación con k-means en espacio YCbCr ---
 ycbcr_img = rgb2ycbcr(img_bilateral);
@@ -48,3 +48,48 @@ end
 %% --- PARTE 5: Visualización resultados limpiados ---
 figure; imshow(label2rgb(L_filtrado, 'jet', 'k'));
 title('Segmentación YCbCr tras filtrado y limpieza de clusters');
+
+%% --- PARTE 4.5: Eliminar huecos y rellenar losetas ---
+
+% Crear una nueva matriz para las losetas completas y sin huecos
+L_rellenado = zeros(size(L_filtrado), 'like', L_filtrado);
+
+for i = 1:k
+    % Máscara del cluster i
+    mask_i = (L_filtrado == i);
+
+    % Rellenar huecos (elimina agujeros dentro de la loseta)
+    mask_i_relleno = imfill(mask_i, 'holes');
+
+    % Guardar en resultado final con el mismo índice de cluster
+    L_rellenado(mask_i_relleno) = i;
+end
+
+%% --- PARTE 5: Visualización resultados rellenados ---
+figure; imshow(label2rgb(L_rellenado, 'jet', 'k'));
+title('Losetas rellenadas sin huecos internos')
+
+
+%% --- PARTE 6: Visualizar cada cluster aplicado a la imagen original ---
+
+figure;
+for i = 1:k
+    % Crear máscara del cluster i
+    mask_i = (L_rellenado == i);
+    
+    % Aplicar máscara a la imagen original
+    img_cluster = zeros(size(img), 'like', img);
+    for c = 1:3
+        canal = img(:,:,c);
+        canal_masked = zeros(size(canal), 'like', canal);
+        canal_masked(mask_i) = canal(mask_i);
+        img_cluster(:,:,c) = canal_masked;
+    end
+    
+    % Mostrar en un subplot
+    subplot(2, 3, i); % 2 filas x 3 columnas
+    imshow(img_cluster);
+    title(['Cluster ', num2str(i)]);
+end
+
+sgtitle('Cada cluster aplicado a la imagen original');
