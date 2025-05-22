@@ -1,7 +1,7 @@
 %% Preprocesamiento para la extracción del tablero
 clear; close all; clc;
 % Cargar imagen
-imagen = imread('imgs/catan 5.jpeg'); 
+imagen = imread('imgs/catan 7.jpeg'); 
 figure;imshow(imagen);title('Imagen original');
 
 imagen_double = im2double(imagen);
