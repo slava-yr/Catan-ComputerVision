@@ -1,7 +1,7 @@
-%% Preprocesamiento
+%% Preprocesamiento para la extracción del tablero
 clear; close all; clc;
 % Cargar imagen
-imagen = imread('imgs/catan 1.jpeg'); 
+imagen = imread('imgs/catan 2.jpeg'); 
 figure;imshow(imagen);title('Imagen original');
 
 imagen_double = im2double(imagen);
@@ -21,7 +21,7 @@ centro = L(round(m/3):round(2*m/3), round(n/3):round(2*n/3));
 modo = mode(centro(:));
 mascara_tablero = L == modo;
 
-% Crear lista de etapas
+%% Crear lista de etapas
 etapas = cell(1, 9);
 titulos = {
     '1. Imagen original', 
@@ -68,7 +68,7 @@ se = strel('disk', 25);
 mascara_tablero = imerode(mascara_tablero, se);
 etapas{9} = mascara_tablero;
 
-% Mostrar en figura única
+% Mostrar todas las etapas
 figure('Name','Etapas del preprocesamiento del tablero','Position',[100 100 1400 700]);
 for i = 1:9
     subplot(3,3,i);
@@ -77,9 +77,7 @@ for i = 1:9
 end
 
 
-
 %%
-
 % Aplicar la máscara a la imagen original
 imagen_segmentada = imagen; % Copia original
 
