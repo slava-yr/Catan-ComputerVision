@@ -1,0 +1,83 @@
+clear; close all; clc;
+%% Preprocesamiento
+% Cargar imagen
+imagen = imread('imgs/catan 7.jpeg'); 
+figure;imshow(imagen);title('Imagen original');
+
+imagen_double = im2double(imagen);
+
+% Detectar zonas muy brillantes (flash)
+umbral_flash = 0.8;
+mask_flash = max(imagen_double,[],3) > umbral_flash;
+
+% Atenuar zonas saturadas
+% Imagen suavizada
+imagen_blur = imgaussfilt(imagen_double, 10);
+% Fusión con un peso (alpha): 0 = imagen original, 1 = imagen suavizada
+alpha = 0.9; % mayor alpha → más suavizado
+imagen_double(mask_flash) = ...
+    alpha * imagen_blur(mask_flash) + (1 - alpha) * imagen_double(mask_flash);
+
+% Suavizar con filtro bilateral para reducir reflejos duros
+%imagen_suave = imbilatfilt(imagen_double, 0.1, 15); % sigmaColor bajo, sigmaSpace mayor
+
+figure; imshow(imagen_double);title('Imagen suave');
+
+%%
+
+% Convertir a Lab
+lab = rgb2lab(imagen_suave);
+
+% Aplicar k-means con 2 clusters
+L = imsegkmeans(single(lab), 2, 'NumAttempts', 3);
+
+% Identificar el cluster correspondiente al tablero
+[m, n, ~] = size(imagen);
+centro = L(round(m/3):round(2*m/3), round(n/3):round(2*n/3));
+modo = mode(centro(:));
+mascara_tablero = L == modo;
+
+% Rellenar huecos
+mascara_tablero = imfill(mascara_tablero, 'holes');
+
+% Eliminar regiones pequeñas
+mascara_tablero = bwareaopen(mascara_tablero, 8000); 
+
+% Aplicar cierre morfológico con un elemento estructurante grande (p.ej. disco)
+se = strel('disk', 20);
+mascara_tablero = imclose(mascara_tablero, se);
+
+% ---- Conservar solo el componente más grande (el tablero real) ----
+mascara_tablero = bwareafilt(mascara_tablero, 1);
+
+se = strel('disk', 10);
+mascara_tablero = imopen(mascara_tablero, se);
+mascara_tablero = imclose(mascara_tablero, se);
+
+% Erosionar para ajustar el borde hacia dentro (más estricto)
+se = strel('disk', 5);
+mascara_tablero = imerode(mascara_tablero, se);
+
+% Mostrar resultado final
+figure;imshow(mascara_tablero);
+title('Máscara final: solo el tablero principal');
+
+
+%%
+
+% Aplicar la máscara a la imagen original
+imagen_segmentada = imagen; % Copia original
+
+% Poner a negro el fondo (fuera del tablero)
+for c = 1:3
+    canal = imagen_segmentada(:,:,c);
+    canal(~mascara_tablero) = 0;
+    imagen_segmentada(:,:,c) = canal;
+end
+
+% Mostrar imagen segmentada
+figure;
+imshow(imagen_segmentada);
+title('Imagen original con solo el tablero');
+imwrite(imagen_segmentada,"hola.png")
+
