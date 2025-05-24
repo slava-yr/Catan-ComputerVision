@@ -1,7 +1,7 @@
 %% Preprocesamiento para la extracción del tablero
 clear; close all; clc;
 % Cargar imagen
-imagen = imread('imgs/catan 7.jpeg'); 
+imagen = imread('imgs/catan 3.jpeg'); 
 figure;imshow(imagen);title('Imagen original');
 
 imagen_double = im2double(imagen);
@@ -13,6 +13,7 @@ figure; imshow(imagen_suave);title('Imagen suave');
 
 %% Convertir a Lab y aplicar k-means
 lab = rgb2lab(imagen_suave);
+figure;imshow(lab);title('imagen lab');
 L = imsegkmeans(single(lab), 2, 'NumAttempts', 5);
 [m, n, ~] = size(imagen);
 

@@ -10,15 +10,44 @@ figure; imshow(img); title('Imagen original');
 
 %% --- PARTE 2: Preprocesamiento ---
 % Filtro bilateral para suavizar y reducir ruido/reflejos
-img_bilateral = imbilatfilt(img, 0.2, 3);
-figure; imshow(img_bilateral); title('Imagen preprocesada');
+%img_bilateral = imbilatfilt(img, 20, 10);
+%figure; imshow(img_bilateral); title('Imagen preprocesada');
 
 k = 6; % número de clusters (losetas)
 
-%% --- PARTE 3: Segmentación con k-means en espacio YCbCr ---
-ycbcr_img = rgb2ycbcr(img_bilateral);
-ycbcr_img_single = im2single(ycbcr_img);
+%%
+% 1. Convertir a ycbcr
+img_ycbcr = rgb2ycbcr(img);
+Y = img_ycbcr(:,:,1);  % Canal de luminancia
+
+% 2. Aplicar filtro bilateral solo a Y
+Y_filtered = imbilatfilt(Y, 20, 15);
+
+% 3. Visualizar canal Y original y filtrado
+figure;
+subplot(1,2,1); imshow(Y); title('Canal Y original');
+subplot(1,2,2); imshow(Y_filtered); title('Canal Y filtrado');
+
+% 4. Reconstruir imagen YCbCr con Y filtrado
+img_ycbcr_filtered = img_ycbcr;
+img_ycbcr_filtered(:,:,1) = Y_filtered;
+
+% 5. Visualizar imagen reconstruida en RGB
+img_filtered_rgb = ycbcr2rgb(img_ycbcr_filtered);
+figure;
+subplot(1,2,1); imshow(img); title('Original RGB');
+subplot(1,2,2); imshow(img_filtered_rgb); title('RGB con Y filtrado');
+
+% 6. Preparar imagen para segmentación
+ycbcr_img_single = im2single(img_ycbcr_filtered);
+
+% 7. Segmentar con k-means
 L_ycbcr = imsegkmeans(ycbcr_img_single, k);
+
+% 8. Visualizar la segmentación
+figure;
+imshow(label2rgb(L_ycbcr)); title(['Segmentación k-means (k = ', num2str(k), ')']);
+
 
 %% --- PARTE 4: Filtrado y limpieza por cluster ---
 
