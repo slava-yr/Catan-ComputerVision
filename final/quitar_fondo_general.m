@@ -1,12 +1,12 @@
-clear;close;clc;
+clear; close; clc;
 figure('Name','Contornos Convexos','NumberTitle','off');
 figure('Name','Máscaras de Recorte','NumberTitle','off');
-% Entrada: Imagen original
-% Salida: Máscara del tablero [mask_poly]
+figure('Name','Imagen sin Fondo','NumberTitle','off'); % Nueva figura
 
 for i = 1:10
     I = imread(sprintf('imgs2/catan %d.jpeg', i));
     hsv = rgb2hsv(I);
+
     % Máscara de mar
     mar_mask = (hsv(:,:,1)>0.5 & hsv(:,:,1)<0.7) & (hsv(:,:,2)>0.4) & (hsv(:,:,3)>0.3);
     mar_mask = imclose(imopen(mar_mask, strel('disk',5)), strel('disk',10));
@@ -31,8 +31,8 @@ for i = 1:10
     else
         mask_poly = false(size(mar_mask));
     end
-    
-    % Mostrar imagen con polígono
+
+    % Mostrar imagen con contorno
     figure(1);
     subplot(2,5,i);
     imshow(I); hold on;
@@ -46,4 +46,17 @@ for i = 1:10
     subplot(2,5,i);
     imshow(mask_poly);
     title(sprintf('Máscara %d', i));
+
+    % Mostrar imagen sin fondo
+    img_sin_fondo = I;
+    for c = 1:3
+        canal = I(:,:,c);
+        canal(~mask_poly) = 0;
+        img_sin_fondo(:,:,c) = canal;
+    end
+
+    figure(3);
+    subplot(2,5,i);
+    imshow(img_sin_fondo);
+    title(sprintf('Sin fondo %d', i));
 end
