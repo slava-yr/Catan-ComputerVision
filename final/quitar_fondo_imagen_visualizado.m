@@ -1,17 +1,30 @@
 clear; close all; clc;
 
 % Leer imagen (cambia el nombre o ruta según necesites)
-I = imread('imgs2/catan 7.jpeg');
+I = imread('imgs2/catan 3.jpeg');
+figure('Name','Imagen Original','NumberTitle','off');
+imshow(I);
+title('Imagen Original');
 
 % Convertir a HSV
 hsv = rgb2hsv(I);
+figure('Name','Imagen en HSV','NumberTitle','off');
+imshow(hsv);
+title('Imagen en espacio de color HSV');
 
 % Máscara del mar basada en color
 mar_mask = (hsv(:,:,1)>0.5 & hsv(:,:,1)<0.7) & (hsv(:,:,2)>0.4) & (hsv(:,:,3)>0.3);
+figure('Name','Máscara Inicial del Mar','NumberTitle','off');
+imshow(mar_mask);
+title('Máscara basada en rango HSV');
 
 % Limpiar máscara con operaciones morfológicas
-mar_mask = imclose(imopen(mar_mask, strel('disk',5)), strel('disk',10));
+mar_mask = imopen(mar_mask, strel('disk',5));
+mar_mask = imclose(mar_mask, strel('disk',10));
 mar_mask = imfill(mar_mask,'holes');
+figure('Name','Máscara del Mar (limpia)','NumberTitle','off');
+imshow(mar_mask);
+title('Máscara del mar tras morfología');
 
 % Componentes conectados
 CC = bwconncomp(mar_mask);
@@ -22,9 +35,16 @@ mask_largest = false(size(mar_mask));
 if ~isempty(numPixels)
     mask_largest(CC.PixelIdxList{numPixels == max(numPixels)}) = true;
 end
+figure('Name','Región de mar más grande','NumberTitle','off');
+imshow(mask_largest);
+title('Mayor componente conectada (mar)');
 
 % Encontrar perímetro
 [y,x] = find(bwperim(mask_largest));
+figure('Name','Perímetro del Mar','NumberTitle','off');
+imshow(mask_largest); hold on;
+plot(x, y, 'r.', 'MarkerSize', 1);
+title('Perímetro de la región del mar');
 
 % Calcular polígono convexo
 if numel(x) >= 3
@@ -39,14 +59,9 @@ if ~isempty(K)
 else
     mask_poly = false(size(mar_mask));
 end
-
-% Mostrar imagen original con contorno del polígono convexo
-figure('Name','Contorno Poligonal sobre Imagen','NumberTitle','off');
-imshow(I); hold on;
-if ~isempty(K)
-    plot(x(K), y(K), 'r', 'LineWidth', 2); % Línea roja del polígono convexo
-end
-title('Contorno poligonal sobre la imagen original');
+figure('Name','Máscara Poligonal','NumberTitle','off');
+imshow(mask_poly);
+title('Máscara poligonal (envolvente convexa del mar)');
 
 % Aplicar máscara a la imagen original (element-wise multiplicación para RGB)
 I_recortada = I;
